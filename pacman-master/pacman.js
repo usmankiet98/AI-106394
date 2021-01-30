@@ -815,6 +815,7 @@ var PACMAN = (function () {
     
     function startLevel() {        
         user.resetPosition();
+        ghosts = 0;
         for (var i = 0; i < ghosts.length; i += 1) { 
             ghosts[i].reset();
         }

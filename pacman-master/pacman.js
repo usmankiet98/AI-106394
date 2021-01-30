@@ -19,6 +19,7 @@ var NONE        = 4,
     COUNTDOWN   = 8,
     EATEN_PAUSE = 9,
     DYING       = 10,
+    PAUSE_ON_PILL = 11,
     Pacman      = {};
 
 Pacman.FPS = 30;
@@ -217,7 +218,6 @@ Pacman.Ghost = function (game, map, colour) {
     };
     
     function move(ctx) {
-        
         var oldPos = position,
             onGrid = onGridSquare(position),
             npos   = null;
@@ -246,7 +246,8 @@ Pacman.Ghost = function (game, map, colour) {
                 "x" : pointToCoord(nextSquare(npos.x, direction))
             })) {
             
-            due = getRandomDirection();            
+            due = getRandomDirection();
+
             return move(ctx);
         }
 
@@ -387,9 +388,8 @@ Pacman.User = function (game, map) {
     };
 
     function move(ctx) {
-        
         var npos        = null, 
-            nextWhole   = null, 
+            nextWhole   = null,
             oldPosition = position,
             block       = null;
         
@@ -418,6 +418,7 @@ Pacman.User = function (game, map) {
         }
         
         if (npos.y === 100 && npos.x >= 190 && direction === RIGHT) {
+            console.log('MOVED');
             npos = {"y": 100, "x": -10};
         }
         
@@ -441,7 +442,7 @@ Pacman.User = function (game, map) {
                 game.completedLevel();
             }
             
-            if (block === Pacman.PILL) { 
+            if (block === Pacman.PILL) {
                 game.eatenPill();
             }
         }   
@@ -457,7 +458,7 @@ Pacman.User = function (game, map) {
         return rem > 3 || rem < 7;
     };
 
-    function calcAngle(dir, pos) { 
+    function calcAngle(dir, pos) {
         if (dir == RIGHT && (pos.x % 10 < 5)) {
             return {"start":0.25, "end":1.75, "direction": false};
         } else if (dir === DOWN && (pos.y % 10 < 5)) { 
@@ -986,21 +987,20 @@ var PACMAN = (function () {
                 user.drawDead(ctx, (tick - timerStart) / (Pacman.FPS * 2));
             }
         } else if (state === COUNTDOWN) {
-            
+
             diff = 5 + Math.floor((timerStart - tick) / Pacman.FPS);
-            
+
             if (diff === 0) {
                 map.draw(ctx);
                 setState(PLAYING);
             } else {
-                if (diff !== lastTime) { 
+                if (diff !== lastTime) {
                     lastTime = diff;
                     map.draw(ctx);
                     dialog("Starting in: " + diff);
                 }
             }
-        } 
-
+        }
         drawFooter();
     }
 
@@ -1010,7 +1010,8 @@ var PACMAN = (function () {
         eatenCount = 0;
         for (i = 0; i < ghosts.length; i += 1) {
             ghosts[i].makeEatable(ctx);
-        }        
+        };
+        setState(EATEN_PAUSE);
     };
     
     function completedLevel() {
@@ -1021,7 +1022,7 @@ var PACMAN = (function () {
         startLevel();
     };
 
-    function keyPress(e) { 
+    function keyPress(e) {
         if (state !== WAITING && state !== PAUSE) { 
             e.preventDefault();
             e.stopPropagation();
@@ -1045,7 +1046,7 @@ var PACMAN = (function () {
         map   = new Pacman.Map(blockSize);
         user  = new Pacman.User({ 
             "completedLevel" : completedLevel, 
-            "eatenPill"      : eatenPill 
+            "eatenPill"      : eatenPill
         }, map);
 
         for (i = 0, len = ghostSpecs.length; i < len; i += 1) {
